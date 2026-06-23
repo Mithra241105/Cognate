@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-neo: #e8e8e8;
+  --shadow-neo-convex: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+  --shadow-neo-concave: inset 10px 10px 20px #bebebe, inset -10px -10px 20px #ffffff;
+  --shadow-neo-convex-sm: 6px 6px 14px #bebebe, -6px -6px 14px #ffffff;
+  --shadow-neo-concave-sm: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--color-neo);
+    color: #1E293B;
+    font-family: 'Inter', system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-neo);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #bebebe;
+    border-radius: 999px;
+}
+
+::selection {
+    background: rgba(30, 41, 59, 0.15);
+}
+
+.spinner {
+    position: relative;
+    width: 9px;
+    height: 9px;
+}
+
+.spinner div {
+    position: absolute;
+    width: 50%;
+    height: 150%;
+    background: #1E293B;
+    transform: rotate(calc(var(--rotation) * 1deg)) translate(0, calc(var(--translation) * 1%));
+    animation: spinner-fzua35 1s calc(var(--delay) * 1s) infinite ease;
+}
+
+.spinner div:nth-child(1) { --delay: 0.1; --rotation: 36; --translation: 150; }
+.spinner div:nth-child(2) { --delay: 0.2; --rotation: 72; --translation: 150; }
+.spinner div:nth-child(3) { --delay: 0.3; --rotation: 108; --translation: 150; }
+.spinner div:nth-child(4) { --delay: 0.4; --rotation: 144; --translation: 150; }
+.spinner div:nth-child(5) { --delay: 0.5; --rotation: 180; --translation: 150; }
+.spinner div:nth-child(6) { --delay: 0.6; --rotation: 216; --translation: 150; }
+.spinner div:nth-child(7) { --delay: 0.7; --rotation: 252; --translation: 150; }
+.spinner div:nth-child(8) { --delay: 0.8; --rotation: 288; --translation: 150; }
+.spinner div:nth-child(9) { --delay: 0.9; --rotation: 324; --translation: 150; }
+.spinner div:nth-child(10) { --delay: 1.0; --rotation: 360; --translation: 150; }
+
+@keyframes spinner-fzua35 {
+    0%, 10%, 20%, 30%, 50%, 60%, 70%, 80%, 90%, 100% {
+        transform: rotate(calc(var(--rotation) * 1deg)) translate(0, calc(var(--translation) * 1%));
+    }
+
+    50% {
+        transform: rotate(calc(var(--rotation) * 1deg)) translate(0, calc(var(--translation) * 1.5%));
+    }
+}

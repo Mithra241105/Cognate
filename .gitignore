@@ -1,0 +1,26 @@
+# .gitignore
+
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.env.local
+
+# Machine Learning / Hugging Face Cache
+.cache/
+models/
+*.bin
+*.safetensors
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+.next/
+dist/
+build/
