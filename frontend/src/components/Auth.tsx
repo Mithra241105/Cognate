@@ -36,8 +36,10 @@ export default function Auth() {
 
         const endpoint = isLogin ? "/login" : "/signup";
 
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
         try {
-            const response = await fetch(`http://localhost:8000${endpoint}`, {
+            const response = await fetch(`${API_URL}${endpoint}`, {
                 method:  "POST",
                 headers: { "Content-Type": "application/json" },
                 body:    JSON.stringify({ email, password })
@@ -70,7 +72,8 @@ export default function Auth() {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8000/verify-otp", {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const response = await fetch(`${API_URL}/verify-otp`, {
                 method:  "POST",
                 headers: { "Content-Type": "application/json" },
                 body:    JSON.stringify({ email, otp: fullOtp })

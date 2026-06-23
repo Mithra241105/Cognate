@@ -32,15 +32,21 @@
 | **Backend** | FastAPI + Uvicorn | Async Python API server |
 | **Database** | MongoDB Atlas (Motor async driver) | Question vector + user persistence |
 | **Auth** | JWT (HS256) + OTP via Gmail SMTP | Stateless session management |
-| **Bi-Encoder** | `BAAI/bge-small-en-v1.5` | Dense vector retrieval (Stage 1) |
 | **Cross-Encoder** | `cross-encoder/ms-marco-MiniLM-L-6-v2` | High-precision reranking (Stage 2) |
 | **OTP Email** | Gmail SMTP SSL (port 465) | Transactional email delivery |
 
 ---
 
+## 🗄️ Database Snapshot
+
+<img width="1918" height="763" alt="MongoDB Atlas Dashboard" src="https://github.com/user-attachments/assets/4b7d3d8b-7dc6-400f-a447-07c70828ae6b" />
+*A snapshot of the MongoDB Atlas cluster showing secure `bcrypt` hashed user passwords and dense vector embeddings.*
+
+---
+
 ## 🤖 AI Architecture — The Two-Stage Retrieval Engine
 
-```
+```text
 User Question
       │
       ▼

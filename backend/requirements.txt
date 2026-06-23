@@ -1,7 +1,9 @@
 fastapi
 uvicorn
-motor
+motor[srv]
+pymongo[srv]
 python-dotenv
-passlib
-bcrypt
-python-jose
+passlib[bcrypt]
+python-jose[cryptography]
+certifi
+sentence-transformers

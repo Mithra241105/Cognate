@@ -51,9 +51,10 @@ export default function Dashboard() {
 
     const fetchHistory = useCallback(async () => {
         try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
             const url = filterTag !== "All"
-                ? `http://localhost:8000/api/history?tag=${encodeURIComponent(filterTag)}`
-                : "http://localhost:8000/api/history";
+                ? `${API_URL}/api/history?tag=${encodeURIComponent(filterTag)}`
+                : `${API_URL}/api/history`;
             const response = await fetch(url, {
                 headers: getAuthHeader()
             });
@@ -74,7 +75,8 @@ export default function Dashboard() {
         setResult(null);
 
         try {
-            const response = await fetch("http://localhost:8000/api/questions", {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const response = await fetch(`${API_URL}/api/questions`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
