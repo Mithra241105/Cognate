@@ -11,9 +11,21 @@
 
 ---
 
+## 📸 Application Showcase
+
+> <img width="1918" height="967" alt="image" src="https://github.com/user-attachments/assets/d5c54a49-cb83-428f-bc2f-dceb571a52a7" />
+
+
+> <img width="1918" height="677" alt="image" src="https://github.com/user-attachments/assets/8d3071fa-a30a-4fe0-b8dd-6bffd83f7b48" />
+
+
+---
+
 ## 📋 Overview
 
 Cognate is a full-stack semantic analysis platform for academic question management. It detects duplicate questions, classifies them by STEM subject (Math, Physics, Biology, CS) and Bloom's cognitive level (Recall, Apply, Evaluate), and persists embeddings to MongoDB for intelligent duplicate detection.
+
+*This project was built to fulfill **Option B: Similar Question Finder with Auto-Tagging** for the EduFlash EdTech Hiring Assignment.*
 
 ### Features:
 - Natural language question submission with secure JWT authentication
@@ -21,6 +33,15 @@ Cognate is a full-stack semantic analysis platform for academic question managem
 - Two-stage duplicate detection: centroid classifier + cross-encoder reranking
 - Native Bcrypt password hashing
 - Real-time semantic similarity search across question corpus
+
+---
+
+## 🔑 Pre-Configured Test Accounts
+
+For quick evaluation without signing up, you may use these pre-seeded test accounts on the live deployment:
+
+- **Account 1:** `mithra112005@gmail.com` | **Password:** `1234`
+- **Account 2:** `hsri59145@gmail.com` | **Password:** `123456`
 
 ---
 
@@ -68,7 +89,6 @@ Cognate is a full-stack semantic analysis platform for academic question managem
 ```
 
 ### Seed Data
-
 The `backend/seed_database.py` script pre-populates MongoDB with 40 academic questions across 4 domains:
 
 ```python
@@ -111,34 +131,34 @@ python seed_database.py
 
 ### Two-Stage Retrieval Pipeline
 
-```
+```plaintext
 User Question
       ↓
 ┌─ GATE 1: Classifier ─────────────────┐
-│ • Negative Lexical Anchors (22 junk   │
-│   tokens: "weather", "recipe", etc.)  │
-│ • Centroid Cosine Similarity          │
-│   (threshold: 0.45)                   │
-│ • Disambiguation Matrix               │
+│ • Negative Lexical Anchors (22 junk  │
+│   tokens: "weather", "recipe", etc.) │
+│ • Centroid Cosine Similarity         │
+│   (threshold: 0.45)                  │
+│ • Disambiguation Matrix              │
 └─────────────────────────────────────┬─┘
                 ↓
 ┌─ GATE 2: Proximity Floor ────────────┐
-│ • Min similarity threshold: 0.15      │
-│ • Rejects OOD questions before DB     │
+│ • Min similarity threshold: 0.15     │
+│ • Rejects OOD questions before DB    │
 └─────────────────────────────────────┬─┘
                 ↓
 ┌─ STAGE 1: Bi-Encoder Retrieval ─────┐
 │ • BAAI/bge-small-en-v1.5 (384-dim)   │
-│ • Cosine similarity search            │
-│ • Top-10 candidates                   │
-│ • O(n) complexity, <100ms on 10k docs │
+│ • Cosine similarity search           │
+│ • Top-10 candidates                  │
+│ • O(n) complexity, <100ms on 10k docs│
 └─────────────────────────────────────┬─┘
                 ↓
 ┌─ STAGE 2: Cross-Encoder Reranking ──┐
-│ • ms-marco-MiniLM-L-6-v2              │
-│ • Pairwise attention [query, cand]    │
-│ • Temperature softmax (T=0.7)         │
-│ • Duplicate flag: score > 0.98        │
+│ • ms-marco-MiniLM-L-6-v2             │
+│ • Pairwise attention [query, cand]   │
+│ • Temperature softmax (T=0.7)        │
+│ • Duplicate flag: score > 0.98       │
 └─────────────────────────────────────┬─┘
                 ↓
          JSON Response
@@ -147,7 +167,6 @@ User Question
 ```
 
 ### Subject Classification
-
 **3 Mechanisms:**
 
 1. **Negative Anchors** — 22 junk tokens (weather, movie, crypto, etc.)
@@ -155,27 +174,25 @@ User Question
    - Returns OOD immediately if matched
 
 2. **Centroid Cosine Similarity** — Pre-computed domain centroids
-   ```
-   sim(q_vec, domain_centroid) = (q·c) / (|q||c|)
-   If max(sim) > 0.45 → assign domain, else OOD
-   ```
+```plaintext
+sim(q_vec, domain_centroid) = (q·c) / (|q||c|)
+If max(sim) > 0.45 → assign domain, else OOD
+```
 
 3. **Disambiguation Matrix** — Rule-based score adjustments
-   ```javascript
-   {
-     "computer": { "boost": "CS", "penalize": "Bio", 
-                   "boost_factor": 1.3, "penalty": 0.4 }
-   }
-   ```
+```javascript
+{
+  "computer": { "boost": "CS", "penalize": "Bio", 
+                "boost_factor": 1.3, "penalty": 0.4 }
+}
+```
 
 ### Cognitive Level (Bloom's Taxonomy)
-
-```
+```plaintext
 RECALL   — "What is...", "Define...", definitions, facts
 APPLY    — "How to...", "Calculate...", implement, solve
 EVALUATE — "Analyze...", "Compare...", trade-offs, critique
 ```
-
 Each level has a pre-computed centroid; highest scoring level wins.
 
 ---
@@ -188,27 +205,28 @@ Each level has a pre-computed centroid; highest scoring level wins.
 - MongoDB Atlas M0 cluster
 
 ### Step 1: Environment
-
 Create `.env` in project root:
-
 ```env
 MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
 SECRET_KEY=your_secret_key_min_32_chars
-PRODUCTION_ORIGIN=https://cognate-six.vercel.app
+PRODUCTION_ORIGIN=http://localhost:3000
+
+# Email Configuration (Required for Password Recovery)
+MAILTRAP_HOST=live.smtp.mailtrap.io
+MAILTRAP_PORT=587
+MAILTRAP_USER=api
+MAILTRAP_PASS=your_mailtrap_token
 ```
 
 ### Step 2: Launch
-
 ```bash
 Double-click start.bat
 ```
-
 Auto-opens:
-- **Terminal 1**: FastAPI on `http://localhost:8000`
-- **Terminal 2**: Next.js on `http://localhost:3000`
+- **Terminal 1:** FastAPI on `http://localhost:8000`
+- **Terminal 2:** Next.js on `http://localhost:3000`
 
 ### Step 3: Open
-
 Navigate to `http://localhost:3000`
 
 ---
@@ -216,7 +234,6 @@ Navigate to `http://localhost:3000`
 ## 🧪 Quick Test
 
 ### Signup
-
 ```bash
 curl -X POST http://localhost:8000/signup \
   -H "Content-Type: application/json" \
@@ -224,13 +241,11 @@ curl -X POST http://localhost:8000/signup \
 ```
 
 ### Login
-
 ```bash
 curl -X POST http://localhost:8000/login \
   -H "Content-Type: application/json" \
   -d '{"email": "test@example.com", "password": "Password123"}'
 ```
-
 Response:
 ```json
 {
@@ -240,14 +255,12 @@ Response:
 ```
 
 ### Submit Question
-
 ```bash
 curl -X POST http://localhost:8000/api/questions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{"question": "How does Dijkstra algorithm find shortest path?"}'
 ```
-
 Response:
 ```json
 {
@@ -262,7 +275,6 @@ Response:
 ```
 
 ### Duplicate Test (submit same question again)
-
 ```json
 {
   "is_duplicate": true,
@@ -289,7 +301,7 @@ Response:
 
 ## 📁 Project Structure
 
-```text
+```plaintext
 Cognate/
 ├── .env                    # Environment config
 ├── start.bat               # 1-click launcher
@@ -320,7 +332,7 @@ Cognate/
 ## 📦 Dependencies
 
 **Backend:**
-```text
+```plaintext
 fastapi
 uvicorn
 motor[srv]
