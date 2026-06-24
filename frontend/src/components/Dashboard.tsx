@@ -140,18 +140,20 @@ export default function Dashboard() {
                         Cognate
                     </span>
                 </div>
-                <button
-                    onClick={() => window.location.href = "/profile"}
-                    className="px-6 py-2.5 rounded-xl shadow-neo-convex active:shadow-neo-concave text-slate-500 font-bold text-xs tracking-widest uppercase transition-all duration-150"
-                >
-                    Profile
-                </button>
-                <button
-                    onClick={handleLogout}
-                    className="px-6 py-2.5 rounded-xl shadow-neo-convex active:shadow-neo-concave text-slate-500 font-bold text-xs tracking-widest uppercase transition-all duration-150"
-                >
-                    Log Out
-                </button>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => window.location.href = "/profile"}
+                        className="px-6 py-2.5 rounded-xl shadow-neo-convex active:shadow-neo-concave text-slate-500 font-bold text-xs tracking-widest uppercase transition-all duration-150"
+                    >
+                        Profile
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        className="px-6 py-2.5 rounded-xl shadow-neo-convex active:shadow-neo-concave text-slate-500 font-bold text-xs tracking-widest uppercase transition-all duration-150"
+                    >
+                        Log Out
+                    </button>
+                </div>
             </header>
 
             {/* ── Bento Grid ─────────────────────────────────────────────── */}
