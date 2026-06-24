@@ -13,7 +13,6 @@ type AuthError = string | null;
  * Sign Up immediately creates an account and redirects to Sign In.
  */
 export default function Auth() {
-    const [isLogin, setIsLogin]           = useState(true);
     const [email, setEmail]               = useState("");
     const [password, setPassword]         = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -25,11 +24,10 @@ export default function Auth() {
         setError(null);
         setIsLoading(true);
 
-        const endpoint = isLogin ? "/login" : "/signup";
         const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
         try {
-            const response = await fetch(`${API_URL}${endpoint}`, {
+            const response = await fetch(`${API_URL}/login`, {
                 method:  "POST",
                 headers: { "Content-Type": "application/json" },
                 body:    JSON.stringify({ email, password })
@@ -55,29 +53,6 @@ export default function Auth() {
 
     const renderFormStage = () => (
         <div className="bg-neo rounded-[40px] shadow-neo-convex p-10">
-            <div className="flex p-1.5 rounded-2xl bg-neo shadow-neo-concave mb-8">
-                <button
-                    onClick={() => { setIsLogin(true); setError(null); }}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 ${
-                        isLogin
-                            ? "bg-neo shadow-neo-convex-sm text-slate-700"
-                            : "text-slate-400 hover:text-slate-500"
-                    }`}
-                >
-                    Sign In
-                </button>
-                <button
-                    onClick={() => { setIsLogin(false); setError(null); }}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 ${
-                        !isLogin
-                            ? "bg-neo shadow-neo-convex-sm text-slate-700"
-                            : "text-slate-400 hover:text-slate-500"
-                    }`}
-                >
-                    Sign Up
-                </button>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="flex flex-col gap-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
@@ -123,8 +98,6 @@ export default function Auth() {
                             )}
                         </button>
                     </div>
-
-
                 </div>
 
                 {error && (
@@ -138,12 +111,7 @@ export default function Auth() {
                     disabled={isLoading}
                     className="w-full py-4 mt-2 rounded-2xl bg-neo shadow-neo-convex active:shadow-neo-concave text-slate-700 font-black tracking-wide transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                    {isLoading
-                        ? "Authenticating..."
-                        : isLogin
-                            ? "Sign In →"
-                            : "Create Account →"
-                    }
+                    {isLoading ? "Authenticating..." : "Continue →"}
                 </button>
             </form>
         </div>
@@ -190,7 +158,7 @@ export default function Auth() {
                         </div>
 
                         <h1 className="text-3xl font-black tracking-tight text-slate-800">
-                            {isLogin ? "Welcome Back" : "Create Account"}
+                            Welcome to Cognate
                         </h1>
                         <p className="text-slate-500 mt-2 font-medium">
                             Access your workspace
