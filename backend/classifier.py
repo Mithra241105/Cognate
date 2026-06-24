@@ -155,7 +155,7 @@ def classify_question_topic(vector: list[float], text: str, app_state) -> dict:
     top_topic     = max(scores, key=lambda t: scores[t])
     highest_score = scores[top_topic]
 
-    if highest_score < 0.45:
+    if highest_score < 0.42:
         return {"tag": "Out of Domain", "confidence": highest_score}
 
     return {"tag": top_topic, "confidence": highest_score}

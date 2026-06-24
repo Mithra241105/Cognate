@@ -62,9 +62,28 @@ async def submit_question(
     cognitive_tag        = cognitive_result["tag"]
     cognitive_confidence = cognitive_result["confidence"]
 
+    db = mongo_instance.client.get_database("app_db")
+    user_record = await db.users.find_one({"email": user_email})
+
+    # --- STRATEGIC OOD GATE ENFORCEMENT ---
+    is_allowed = (assigned_tag != "Out of Domain")
+    
+    # 3. Persist the detailed transactional record to MongoDB Atlas
+    log_entry = {
+        "user_id": user_record["_id"] if user_record else None,
+        "email": user_email,
+        "text": payload.question,
+        "category": assigned_tag,
+        "confidence_score": float(subject_confidence),
+        "is_allowed": is_allowed,
+        "timestamp": datetime.utcnow()
+    }
+    
+    await db.history.insert_one(log_entry)
+
     # ── Gate 1: Classifier Rejection ─────────────────────────────────────────
-    # Hard abort — no vector store access, no DB write.
-    if assigned_tag == "Out of Domain":
+    # Hard abort — no vector store access, no questions DB write (history is logged above).
+    if not is_allowed:
         return QuestionResponse(
             original_question=payload.question,
             topic_tag="Out of Domain",
@@ -75,7 +94,7 @@ async def submit_question(
             similar_questions=[]
         )
 
-    db = mongo_instance.client.get_database("app_db")
+
 
     cursor               = db.questions.find({})
     historical_questions = await cursor.to_list(length=None)
