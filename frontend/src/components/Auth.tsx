@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 
 const ShapeGrid = dynamic(() => import("./ShapeGrid"), { ssr: false });
 
@@ -19,13 +18,11 @@ export default function Auth() {
     const [password, setPassword]         = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError]               = useState<AuthError>(null);
-    const [info, setInfo]                 = useState<string | null>(null);
     const [isLoading, setIsLoading]       = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        setInfo(null);
         setIsLoading(true);
 
         const endpoint = isLogin ? "/login" : "/signup";
@@ -48,10 +45,6 @@ export default function Auth() {
             if (data.access_token) {
                 localStorage.setItem("access_token", data.access_token);
                 window.location.href = "/";
-            } else if (!isLogin) {
-                setIsLogin(true);
-                setPassword("");
-                setInfo("Account created successfully! You can now sign in.");
             }
         } catch {
             setError("Could not reach server. Is the backend running?");
@@ -64,7 +57,7 @@ export default function Auth() {
         <div className="bg-neo rounded-[40px] shadow-neo-convex p-10">
             <div className="flex p-1.5 rounded-2xl bg-neo shadow-neo-concave mb-8">
                 <button
-                    onClick={() => { setIsLogin(true); setError(null); setInfo(null); }}
+                    onClick={() => { setIsLogin(true); setError(null); }}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 ${
                         isLogin
                             ? "bg-neo shadow-neo-convex-sm text-slate-700"
@@ -74,7 +67,7 @@ export default function Auth() {
                     Sign In
                 </button>
                 <button
-                    onClick={() => { setIsLogin(false); setError(null); setInfo(null); }}
+                    onClick={() => { setIsLogin(false); setError(null); }}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 ${
                         !isLogin
                             ? "bg-neo shadow-neo-convex-sm text-slate-700"
@@ -134,11 +127,6 @@ export default function Auth() {
 
                 </div>
 
-                {info && (
-                    <div className="px-4 py-3 rounded-xl bg-neo shadow-neo-concave text-sm font-medium text-slate-500 text-center">
-                        {info}
-                    </div>
-                )}
                 {error && (
                     <div className="px-4 py-3 rounded-xl bg-neo shadow-neo-concave text-sm font-medium text-red-400 text-center">
                         {error}

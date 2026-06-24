@@ -65,7 +65,12 @@ async def signup(user: UserCreate):
 
     await db.users.insert_one(user_dict)
 
-    return {"message": "Account created successfully. You can now sign in."}
+    access_token = create_access_token({"sub": user.email})
+
+    return {
+        "access_token": access_token,
+        "token_type":   "bearer"
+    }
 
 
 
