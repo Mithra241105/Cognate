@@ -46,6 +46,7 @@ def send_otp_email_sync(user_email: str, otp: str):
 
     msg = EmailMessage()
     msg['Subject']    = "Authenticate Your Cognate Workspace"
+    smtp_user = smtp_user.strip()
     msg['From']       = formataddr(('Cognate Workspace', smtp_user))
     msg['Reply-To']   = smtp_user
     msg['To']         = user_email
@@ -111,10 +112,10 @@ def send_otp_email_sync(user_email: str, otp: str):
 
 def send_reset_email(to_email: str, reset_token: str):
     # Fetch Brevo credentials from your environment variables
-    sender_email = os.getenv("SENDER_EMAIL")     # The email you verified on Brevo
+    sender_email = os.getenv("SENDER_EMAIL", "").strip()     # The email you verified on Brevo
     smtp_server = os.getenv("SMTP_SERVER", "smtp-relay.brevo.com") 
     smtp_port = int(os.getenv("SMTP_PORT", 587)) # Set to 587
-    smtp_username = os.getenv("SMTP_USERNAME")   # From your screenshot: afc846001@smtp-brevo.com
+    smtp_username = os.getenv("SMTP_USERNAME", "").strip()   # From your screenshot: afc846001@smtp-brevo.com
     smtp_password = os.getenv("SMTP_PASSWORD")   # The SMTP Key you generate on Brevo
     
     if not smtp_username or not smtp_password:
@@ -183,6 +184,7 @@ def send_verification_email_sync(user_email: str, token: str):
 
     msg = EmailMessage()
     msg['Subject']    = "Authenticate Your Cognate Workspace"
+    smtp_user = smtp_user.strip()
     msg['From']       = smtp_user
     msg['To']         = user_email
     msg['Message-ID'] = make_msgid(domain='cognate.internal')
