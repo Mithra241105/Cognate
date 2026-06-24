@@ -131,16 +131,7 @@ export default function Auth() {
                         </button>
                     </div>
 
-                    {isLogin && (
-                        <div className="flex justify-end mt-1">
-                            <Link
-                                href="/forgot-password"
-                                className="text-sm text-slate-400 hover:text-[#8a5cff] transition-colors font-medium"
-                            >
-                                Forgot Password?
-                            </Link>
-                        </div>
-                    )}
+
                 </div>
 
                 {info && (

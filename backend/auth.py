@@ -19,9 +19,6 @@ router = APIRouter()
 
 # ── Request Models ────────────────────────────────────────────────────────────
 
-class ResetPasswordRequest(BaseModel):
-    email:        str
-    new_password: str
 
 
 # ── Private Helpers ───────────────────────────────────────────────────────────
@@ -63,47 +60,13 @@ async def signup(user: UserCreate):
 
     user_dict = {
         "email":       user.email,
-        "password":    hashed_password,
-        "is_verified": True  # Directly verified
+        "password":    hashed_password
     }
 
     await db.users.insert_one(user_dict)
 
     return {"message": "Account created successfully. You can now sign in."}
 
-
-# ── POST /reset-password ──────────────────────────────────────────────────────
-
-@router.post("/reset-password")
-async def reset_password(request: ResetPasswordRequest):
-    """
-    Directly resets the password for a given email if the email exists.
-    """
-    db   = await _get_db()
-    user = await db.users.find_one({"email": request.email})
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No account found with this email."
-        )
-
-    if not request.new_password or len(request.new_password) < 6:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 6 characters."
-        )
-
-    new_hashed_password = get_password_hash(request.new_password)
-
-    await db.users.update_one(
-        {"_id": user["_id"]},
-        {
-            "$set": {"password": new_hashed_password}
-        }
-    )
-
-    return {"message": "Password reset successful. You can now sign in with your new credentials."}
 
 
 # ── POST /login ───────────────────────────────────────────────────────────────
