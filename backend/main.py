@@ -102,3 +102,42 @@ app.include_router(
     prefix="/api",
     tags=["Questions"]
 )
+
+@app.get("/test-email")
+async def force_test_email():
+    import smtplib
+    import os
+    from email.mime.text import MIMEText
+    
+    # 1. Fetch credentials exactly as they are in Hugging Face
+    sender = os.getenv("SENDER_EMAIL", "").strip()
+    server = os.getenv("SMTP_SERVER", "smtp-relay.brevo.com").strip()
+    port = int(os.getenv("SMTP_PORT", 587))
+    user = os.getenv("SMTP_USERNAME", "").strip()
+    pwd = os.getenv("SMTP_PASSWORD", "").strip()
+
+    # 2. Build a dummy email from you, to you
+    msg = MIMEText("If you are reading this, the Hugging Face firewall is officially bypassed.", "plain")
+    msg["Subject"] = "Cognate Diagnostic Test"
+    msg["From"] = sender
+    msg["To"] = sender
+
+    # 3. Force the connection and catch the exact error
+    try:
+        with smtplib.SMTP(server, port, timeout=10) as s:
+            s.set_debuglevel(1) # Forces detailed SMTP logs
+            s.ehlo()
+            s.starttls()
+            s.login(user, pwd)
+            s.sendmail(sender, sender, msg.as_string())
+            
+        return {
+            "status": "MASSIVE SUCCESS", 
+            "message": f"Email successfully fired through {server} on port {port}."
+        }
+    except Exception as e:
+        return {
+            "status": "FATAL FAILURE", 
+            "error_message": str(e),
+            "hint": "Read the error message above carefully to see what blocked it."
+        }
