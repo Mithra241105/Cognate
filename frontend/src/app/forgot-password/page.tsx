@@ -5,69 +5,24 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
-import OTPInput from "../../components/OTPInput";
-
 const ShapeGrid = dynamic(() => import("../../components/ShapeGrid"), { ssr: false });
 
-type ResetStage = "request" | "verify";
-
 /**
- * Two-stage password reset page.
- *
- * Stage 1 — Request: Submits the user's email to trigger a backend OTP dispatch.
- * Stage 2 — Verify: Accepts the 4-digit OTP and the new password, then redirects
- * to the sign-in page on success after a 3-second confirmation delay.
+ * Direct password reset page.
+ * Accepts an email and a new password. If the email exists, the password is reset directly.
  */
 export default function ForgotPasswordPage() {
     const router                        = useRouter();
-    const [stage, setStage]             = useState<ResetStage>("request");
     const [email, setEmail]             = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [otpValue, setOtpValue]       = useState("");
     const [isLoading, setIsLoading]     = useState(false);
     const [error, setError]             = useState<string | null>(null);
     const [success, setSuccess]         = useState(false);
-
-    const handleRequestOTP = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        setIsLoading(true);
-
-        try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-            const response = await fetch(`${API_URL}/forgot-password`, {
-                method:  "POST",
-                headers: { "Content-Type": "application/json" },
-                body:    JSON.stringify({ email })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setError(data.error?.message || data.detail || "Request failed.");
-                return;
-            }
-
-            setStage("verify");
-        } catch {
-            setError("Could not reach server. Is the backend running?");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleOTPComplete = (fullOtp: string) => {
-        setOtpValue(fullOtp);
-    };
 
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
-        if (otpValue.length < 4) {
-            setError("Please enter the complete 4-digit code.");
-            return;
-        }
         if (!newPassword || newPassword.length < 6) {
             setError("Password must be at least 6 characters.");
             return;
@@ -80,7 +35,7 @@ export default function ForgotPasswordPage() {
             const response = await fetch(`${API_URL}/reset-password`, {
                 method:  "POST",
                 headers: { "Content-Type": "application/json" },
-                body:    JSON.stringify({ email, otp: otpValue, new_password: newPassword })
+                body:    JSON.stringify({ email, new_password: newPassword })
             });
 
             const data = await response.json();
@@ -139,13 +94,10 @@ export default function ForgotPasswordPage() {
                             </svg>
                         </div>
                         <h1 className="text-3xl font-black tracking-tight text-slate-800">
-                            {stage === "request" ? "Reset Password" : "Enter Recovery Code"}
+                            Change Password
                         </h1>
                         <p className="text-slate-500 mt-2 font-medium">
-                            {stage === "request"
-                                ? "We'll send a secure code to your inbox"
-                                : `Code sent to ${email}`
-                            }
+                            Set a new password for your account
                         </p>
                     </div>
 
@@ -162,8 +114,8 @@ export default function ForgotPasswordPage() {
                                     <p className="text-xs text-slate-400 mt-1">Redirecting you to Sign In...</p>
                                 </div>
                             </div>
-                        ) : stage === "request" ? (
-                            <form onSubmit={handleRequestOTP} className="space-y-5">
+                        ) : (
+                            <form onSubmit={handleReset} className="space-y-5">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
                                         Email Address
@@ -176,29 +128,6 @@ export default function ForgotPasswordPage() {
                                         className="w-full px-5 py-4 rounded-2xl bg-neo shadow-neo-concave text-slate-700 placeholder-slate-400 focus:outline-none text-sm font-medium transition-all duration-300"
                                         required
                                     />
-                                </div>
-
-                                {error && (
-                                    <div className="px-4 py-3 rounded-xl bg-neo shadow-neo-concave text-sm font-medium text-red-400 text-center">
-                                        {error}
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className="w-full py-4 mt-2 rounded-2xl bg-neo shadow-neo-convex active:shadow-neo-concave text-slate-700 font-black tracking-wide transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                >
-                                    {isLoading ? "Sending..." : "Send Recovery Code →"}
-                                </button>
-                            </form>
-                        ) : (
-                            <form onSubmit={handleReset} className="space-y-5">
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-1">
-                                        4-Digit Recovery Code
-                                    </p>
-                                    <OTPInput onComplete={handleOTPComplete} />
                                 </div>
 
                                 <div className="flex flex-col gap-2">
@@ -227,15 +156,7 @@ export default function ForgotPasswordPage() {
                                     disabled={isLoading}
                                     className="w-full py-4 mt-2 rounded-2xl bg-neo shadow-neo-convex active:shadow-neo-concave text-slate-700 font-black tracking-wide transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                 >
-                                    {isLoading ? "Resetting..." : "Reset Password →"}
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => { setStage("request"); setError(null); setOtpValue(""); }}
-                                    className="w-full text-sm text-slate-400 hover:text-slate-600 transition-colors text-center"
-                                >
-                                    ← Try a different email
+                                    {isLoading ? "Resetting..." : "Change Password →"}
                                 </button>
                             </form>
                         )}

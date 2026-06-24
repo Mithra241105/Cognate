@@ -4,23 +4,17 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
-import OTPInput from "./OTPInput";
-
 const ShapeGrid = dynamic(() => import("./ShapeGrid"), { ssr: false });
 
 type AuthError = string | null;
-type AuthStage = "form" | "verify-otp";
 
 /**
  * Dual-mode authentication surface covering Sign In and Sign Up workflows.
- *
- * Sign Up is a two-stage flow: credential submission transitions the component
- * into an OTP verification stage. On success the user is returned to Sign In.
  * Sign In issues a JWT on success and immediately redirects to the workspace root.
+ * Sign Up immediately creates an account and redirects to Sign In.
  */
 export default function Auth() {
     const [isLogin, setIsLogin]           = useState(true);
-    const [stage, setStage]               = useState<AuthStage>("form");
     const [email, setEmail]               = useState("");
     const [password, setPassword]         = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +29,6 @@ export default function Auth() {
         setIsLoading(true);
 
         const endpoint = isLogin ? "/login" : "/signup";
-
         const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
         try {
@@ -56,8 +49,9 @@ export default function Auth() {
                 localStorage.setItem("access_token", data.access_token);
                 window.location.href = "/";
             } else if (!isLogin) {
-                setStage("verify-otp");
-                setInfo("A 4-digit code has been sent to your email.");
+                setIsLogin(true);
+                setPassword("");
+                setInfo("Account created successfully! You can now sign in.");
             }
         } catch {
             setError("Could not reach server. Is the backend running?");
@@ -65,75 +59,6 @@ export default function Auth() {
             setIsLoading(false);
         }
     };
-
-    const handleOTPComplete = async (fullOtp: string) => {
-        setError(null);
-        setInfo(null);
-        setIsLoading(true);
-
-        try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-            const response = await fetch(`${API_URL}/verify-otp`, {
-                method:  "POST",
-                headers: { "Content-Type": "application/json" },
-                body:    JSON.stringify({ email, otp: fullOtp })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setError(data.error?.message || data.detail || "Verification failed.");
-                return;
-            }
-
-            setStage("form");
-            setIsLogin(true);
-            setPassword("");
-            setInfo("Workspace verified! You can now sign in.");
-        } catch {
-            setError("Could not reach server.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const renderOTPStage = () => (
-        <div className="bg-neo rounded-[40px] shadow-neo-convex p-10">
-            <div className="text-center mb-6">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                    Step 2 of 2 — Verification
-                </p>
-                <h2 className="text-xl font-black text-slate-800">Enter Your Code</h2>
-                <p className="text-sm text-slate-500 mt-2">
-                    Sent to <span className="font-semibold text-slate-700">{email}</span>
-                </p>
-            </div>
-
-            {info && (
-                <div className="px-4 py-3 mb-4 rounded-xl bg-neo shadow-neo-concave text-sm font-medium text-slate-500 text-center">
-                    {info}
-                </div>
-            )}
-            {error && (
-                <div className="px-4 py-3 mb-4 rounded-xl bg-neo shadow-neo-concave text-sm font-medium text-red-400 text-center">
-                    {error}
-                </div>
-            )}
-
-            <OTPInput onComplete={handleOTPComplete} />
-
-            {isLoading && (
-                <p className="text-center text-xs text-slate-400 mt-2 font-medium">Verifying...</p>
-            )}
-
-            <button
-                onClick={() => { setStage("form"); setError(null); setInfo(null); }}
-                className="w-full mt-4 text-sm text-slate-400 hover:text-slate-600 transition-colors text-center"
-            >
-                ← Back to Sign Up
-            </button>
-        </div>
-    );
 
     const renderFormStage = () => (
         <div className="bg-neo rounded-[40px] shadow-neo-convex p-10">
@@ -286,17 +211,14 @@ export default function Auth() {
                         </div>
 
                         <h1 className="text-3xl font-black tracking-tight text-slate-800">
-                            {stage === "verify-otp"
-                                ? "Verify Identity"
-                                : isLogin ? "Welcome Back" : "Create Account"
-                            }
+                            {isLogin ? "Welcome Back" : "Create Account"}
                         </h1>
                         <p className="text-slate-500 mt-2 font-medium">
-                            {stage === "verify-otp" ? "Check your inbox" : "Access your workspace"}
+                            Access your workspace
                         </p>
                     </div>
 
-                    {stage === "verify-otp" ? renderOTPStage() : renderFormStage()}
+                    {renderFormStage()}
 
                     <p className="text-center text-xs text-slate-400 mt-6 font-semibold tracking-wide">
                         Session secured with JWT • Cognate v1.0
