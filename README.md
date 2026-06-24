@@ -13,7 +13,7 @@
 
 ## 🌐 Live Demo
 
-**Hosted Application:** [https://cognate-beta.vercel.app](https://cognate-beta.vercel.app)
+**Hosted Application:** [https://cognate-beta.vercel.app](https://cognate-six.vercel.app/)
 
 Experience the full semantic analysis platform in action. Sign up with your email, verify via OTP, and start submitting academic questions for intelligent duplicate detection and classification.
 
