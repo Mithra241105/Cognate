@@ -39,33 +39,55 @@ async def _get_db():
         )
 
 
+# ── POST /signup ──────────────────────────────────────────────────────────────
+
+@router.post("/signup")
+async def signup(user: UserCreate):
+    """
+    Creates a user record directly.
+    The account is immediately activated.
+    """
+    db            = await _get_db()
+    existing_user = await db.users.find_one({"email": user.email})
+
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this email already exists."
+        )
+
+    hashed_password = get_password_hash(user.password)
+
+    user_dict = {
+        "email":       user.email,
+        "password":    hashed_password
+    }
+
+    await db.users.insert_one(user_dict)
+
+    access_token = create_access_token({"sub": user.email})
+
+    return {
+        "access_token": access_token,
+        "token_type":   "bearer"
+    }
+
+
 # ── POST /login ───────────────────────────────────────────────────────────────
 
 @router.post("/login")
 async def login(user: UserCreate):
     """
-    Unified Authentication Endpoint:
-    If the email exists, verify the password and log them in.
-    If the email does NOT exist, create the account and log them in directly.
+    Authenticates a user and returns a signed JWT.
     """
     db      = await _get_db()
     db_user = await db.users.find_one({"email": user.email})
 
-    if not db_user:
-        # Create new account
-        hashed_password = get_password_hash(user.password)
-        user_dict = {
-            "email":       user.email,
-            "password":    hashed_password
-        }
-        await db.users.insert_one(user_dict)
-    else:
-        # Verify existing account password
-        if not verify_password(user.password, db_user["password"]):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Wrong Email or Password."
-            )
+    if not db_user or not verify_password(user.password, db_user["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Wrong Email or Password."
+        )
 
     access_token = create_access_token({"sub": user.email})
 
