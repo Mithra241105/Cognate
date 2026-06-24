@@ -110,20 +110,22 @@ def send_otp_email_sync(user_email: str, otp: str):
 # ─── 2. Cryptographic Key Reset OTP ────────────────────────────────────────────
 
 def send_reset_email(to_email: str, reset_token: str):
-    sender_email = os.getenv("SENDER_EMAIL")
-    smtp_password = os.getenv("SMTP_PASSWORD") # Your 16-character Google App Password
+    # Fetch Brevo credentials from your environment variables
+    sender_email = os.getenv("SENDER_EMAIL")     # The email you verified on Brevo
+    smtp_server = os.getenv("SMTP_SERVER", "smtp-relay.brevo.com") 
+    smtp_port = int(os.getenv("SMTP_PORT", 587)) # Set to 587
+    smtp_username = os.getenv("SMTP_USERNAME")   # From your screenshot: afc846001@smtp-brevo.com
+    smtp_password = os.getenv("SMTP_PASSWORD")   # The SMTP Key you generate on Brevo
     
-    if not sender_email or not smtp_password:
+    if not smtp_username or not smtp_password:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Email configuration missing from server environment variables."
         )
 
-    # Change this to your live production frontend domain URL
     frontend_url = "https://cognate-six.vercel.app" 
     reset_link = f"{frontend_url}/reset-password?token={reset_token}"
 
-    # Build the HTML modern email body
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Reset Your Cognate Account Password"
     msg["From"] = f"Cognate Platform <{sender_email}>"
@@ -142,9 +144,6 @@ def send_reset_email(to_email: str, reset_token: str):
                         Reset Password
                     </a>
                 </div>
-                <p style="color: #999999; font-size: 14px; line-height: 1.5;">
-                    If you did not request this, please ignore this email. This link will expire shortly.
-                </p>
             </div>
         </body>
     </html>
@@ -152,17 +151,14 @@ def send_reset_email(to_email: str, reset_token: str):
     msg.attach(MIMEText(html_content, "html"))
 
     try:
-        # Connect securely over SSL to Gmail SMTP on Port 465
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender_email, smtp_password)
+        # Port 587 requires standard SMTP (NOT SMTP_SSL)
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.ehlo()
+            server.starttls() # CRITICAL: Upgrades the unencrypted connection to secure TLS
+            server.login(smtp_username, smtp_password)
             server.sendmail(sender_email, to_email, msg.as_string())
         return {"status": "success", "message": "Reset email dispatched safely."}
         
-    except smtplib.SMTPAuthenticationError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="SMTP Authentication failed. Verify SENDER_EMAIL and SMTP_PASSWORD secrets."
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
