@@ -48,6 +48,7 @@ export default function Dashboard() {
     const [query, setQuery]           = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [result, setResult]         = useState<QuestionResponse | null>(null);
+    const [displayName, setDisplayName] = useState<string>("User");
 
     const fetchHistory = useCallback(async () => {
         try {
@@ -65,9 +66,25 @@ export default function Dashboard() {
         } catch { /* silent */ }
     }, [filterTag]);
 
+    const fetchProfile = useCallback(async () => {
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const response = await fetch(`${API_URL}/profile`, {
+                headers: getAuthHeader()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.display_name) {
+                    setDisplayName(data.display_name);
+                }
+            }
+        } catch { /* silent */ }
+    }, []);
+
     useEffect(() => {
         fetchHistory();
-    }, [fetchHistory]);
+        fetchProfile();
+    }, [fetchHistory, fetchProfile]);
 
     const fetchAnalysis = async (textToAnalyze: string) => {
         if (!textToAnalyze.trim() || isProcessing) return;
@@ -141,6 +158,9 @@ export default function Dashboard() {
                     </span>
                 </div>
                 <div className="flex items-center gap-4">
+                    <span className="text-sm font-bold text-slate-500 mr-2">
+                        Welcome, <span className="text-slate-800">{displayName}</span>
+                    </span>
                     <button
                         onClick={() => window.location.href = "/profile"}
                         className="px-6 py-2.5 rounded-xl shadow-neo-convex active:shadow-neo-concave text-slate-500 font-bold text-xs tracking-widest uppercase transition-all duration-150"

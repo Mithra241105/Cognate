@@ -6,12 +6,12 @@ Direct signup (no verification needed), direct password resets (no OTPs), and JW
 """
 
 import pymongo.errors
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 
 from database import mongo_instance
-from models import UserCreate
-from security import create_access_token, get_password_hash, verify_password
+from models import UserCreate, ProfileUpdate, UserResponse
+from security import create_access_token, get_password_hash, verify_password, get_current_user
 
 
 router = APIRouter()
@@ -95,3 +95,42 @@ async def login(user: UserCreate):
         "access_token": access_token,
         "token_type":   "bearer"
     }
+
+
+# ── GET /profile ──────────────────────────────────────────────────────────────
+
+@router.get("/profile", response_model=UserResponse)
+async def get_profile(email: str = Depends(get_current_user)):
+    """
+    Fetches the authenticated user's profile details.
+    """
+    db = await _get_db()
+    user = await db.users.find_one({"email": email})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return UserResponse(
+        email=user["email"],
+        display_name=user.get("display_name", email.split("@")[0])
+    )
+
+
+# ── PUT /profile ──────────────────────────────────────────────────────────────
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(profile: ProfileUpdate, email: str = Depends(get_current_user)):
+    """
+    Updates the authenticated user's profile details.
+    """
+    db = await _get_db()
+    await db.users.update_one(
+        {"email": email},
+        {"$set": {"display_name": profile.display_name}}
+    )
+    
+    user = await db.users.find_one({"email": email})
+    return UserResponse(
+        email=user["email"],
+        display_name=user.get("display_name", email.split("@")[0])
+    )

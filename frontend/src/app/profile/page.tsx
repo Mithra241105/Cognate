@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 
 const ShapeGrid = dynamic(() => import("../../components/ShapeGrid"), { ssr: false });
 
-type MenuSection = "profile" | "account" | "appearance" | "about";
+type MenuSection = "profile" | "account" | "about";
 
 function decodeEmail(): string {
     if (typeof window === "undefined") return "";
@@ -35,8 +35,25 @@ export default function ProfilePage() {
         }
         const decoded = decodeEmail();
         setEmail(decoded);
-        // Derive a default display name from email prefix
-        setDisplayName(decoded.split("@")[0] || "User");
+
+        const fetchProfile = async () => {
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+                const response = await fetch(`${API_URL}/profile`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setDisplayName(data.display_name || decoded.split("@")[0] || "User");
+                } else {
+                    setDisplayName(decoded.split("@")[0] || "User");
+                }
+            } catch {
+                setDisplayName(decoded.split("@")[0] || "User");
+            }
+        };
+
+        fetchProfile();
     }, [router]);
 
     const handleLogout = () => {
@@ -44,9 +61,32 @@ export default function ProfilePage() {
         router.push("/");
     };
 
-    const handleSave = () => {
-        setSaveMessage("Changes saved!");
-        setTimeout(() => setSaveMessage(null), 3000);
+    const handleSave = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            const response = await fetch(`${API_URL}/profile`, {
+                method: "PUT",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
+                body: JSON.stringify({ display_name: displayName })
+            });
+
+            if (response.ok) {
+                setSaveMessage("Changes saved!");
+                setTimeout(() => setSaveMessage(null), 3000);
+            } else {
+                setSaveMessage("Failed to save.");
+                setTimeout(() => setSaveMessage(null), 3000);
+            }
+        } catch {
+            setSaveMessage("Error saving changes.");
+            setTimeout(() => setSaveMessage(null), 3000);
+        }
     };
 
     const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
@@ -68,15 +108,7 @@ export default function ProfilePage() {
                 </svg>
             ),
         },
-        {
-            id: "appearance",
-            label: "Appearance",
-            icon: (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z" />
-                </svg>
-            ),
-        },
+
         {
             id: "about",
             label: "About",
@@ -272,56 +304,7 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                        {activeSection === "appearance" && (
-                            <div className="flex flex-col gap-6">
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Section</p>
-                                    <h2 className="text-2xl font-black text-slate-800">Appearance</h2>
-                                    <p className="text-sm text-slate-500 mt-1">Customize the look and feel of your workspace.</p>
-                                </div>
 
-                                <div className="h-px shadow-neo-concave rounded-full" />
-
-                                <div className="flex flex-col gap-3">
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Theme</p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {["Neumorphic Light", "Classic Flat"].map((theme, i) => (
-                                            <div
-                                                key={theme}
-                                                className={`flex flex-col items-center gap-3 p-5 rounded-2xl cursor-pointer transition-all duration-150 ${
-                                                    i === 0 ? "shadow-neo-concave" : "shadow-neo-convex hover:shadow-neo-concave"
-                                                }`}
-                                            >
-                                                {/* Theme preview swatch */}
-                                                <div className="w-full h-16 rounded-xl overflow-hidden shadow-neo-concave flex items-center justify-center gap-2">
-                                                    <div className="w-8 h-8 rounded-lg" style={{ background: i === 0 ? "#e8e8e8" : "#f8fafc", boxShadow: i === 0 ? "4px 4px 8px #bebebe, -4px -4px 8px #ffffff" : "none", border: i === 1 ? "1px solid #e2e8f0" : "none" }} />
-                                                    <div className="w-5 h-5 rounded-full" style={{ background: "#8a5cff" }} />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    {i === 0 && <div className="w-2 h-2 rounded-full bg-[#8a5cff]" />}
-                                                    <p className="text-xs font-bold text-slate-600">{theme}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <p className="text-xs text-slate-400 ml-1">Additional themes coming soon.</p>
-                                </div>
-
-                                <div className="flex flex-col gap-3">
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Accent Color</p>
-                                    <div className="flex gap-3 px-5 py-4 rounded-2xl bg-neo shadow-neo-concave">
-                                        {["#8a5cff", "#00a0ff", "#00d282", "#ffa500", "#ef4444"].map((color) => (
-                                            <button
-                                                key={color}
-                                                className="w-8 h-8 rounded-full shadow-neo-convex active:shadow-neo-concave transition-all duration-150"
-                                                style={{ background: color }}
-                                            />
-                                        ))}
-                                    </div>
-                                    <p className="text-xs text-slate-400 ml-1">Accent color customization coming soon.</p>
-                                </div>
-                            </div>
-                        )}
 
                         {activeSection === "about" && (
                             <div className="flex flex-col gap-6">
