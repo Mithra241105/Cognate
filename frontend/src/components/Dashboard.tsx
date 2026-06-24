@@ -47,10 +47,15 @@ export default function ProductionDashboard() {
     ? (history.reduce((acc, curr) => acc + curr.confidence_score, 0) / totalQueries * 100).toFixed(1) 
     : "0";
 
-  const filteredHistory = history.filter(item => 
-    item.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredHistory = history.filter(item => {
+    // Provide a fallback empty string if the database field is completely missing
+    const safeText = item?.text || "";
+    const safeCategory = item?.category || "";
+    const searchLower = searchTerm?.toLowerCase() || "";
+
+    return safeText.toLowerCase().includes(searchLower) ||
+           safeCategory.toLowerCase().includes(searchLower);
+  });
 
   if (loading) {
     return (
