@@ -8,6 +8,7 @@ Direct signup (no verification needed), direct password resets (no OTPs), and JW
 import pymongo.errors
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
+import uuid
 
 from database import mongo_instance
 from models import UserCreate, ProfileUpdate, UserResponse
@@ -45,7 +46,6 @@ async def _get_db():
 async def signup(user: UserCreate):
     """
     Creates a user record directly.
-    The account is immediately activated.
     """
     db            = await _get_db()
     existing_user = await db.users.find_one({"email": user.email})
@@ -59,17 +59,15 @@ async def signup(user: UserCreate):
     hashed_password = get_password_hash(user.password)
 
     user_dict = {
+        "id":          str(uuid.uuid4()),
         "email":       user.email,
         "password":    hashed_password
     }
 
     await db.users.insert_one(user_dict)
 
-    access_token = create_access_token({"sub": user.email})
-
     return {
-        "access_token": access_token,
-        "token_type":   "bearer"
+        "message": "Account created successfully. Please sign in."
     }
 
 
