@@ -110,40 +110,32 @@ def send_otp_email_sync(user_email: str, otp: str):
 
 # ─── 2. Cryptographic Key Reset OTP ────────────────────────────────────────────
 
-def send_reset_email(to_email: str, reset_token: str):
-    # Fetch Brevo credentials from your environment variables
-    sender_email = os.getenv("SENDER_EMAIL", "").strip()     # The email you verified on Brevo
-    smtp_server = os.getenv("SMTP_SERVER", "smtp-relay.brevo.com") 
-    smtp_port = int(os.getenv("SMTP_PORT", 587)) # Set to 587
-    smtp_username = os.getenv("SMTP_USERNAME", "").strip()   # From your screenshot: afc846001@smtp-brevo.com
-    smtp_password = os.getenv("SMTP_PASSWORD")   # The SMTP Key you generate on Brevo
+def send_reset_email_sync(to_email: str, reset_otp: str):
+    # 1. Fetch and forcefully clean all secrets (strips hidden spaces/Enter keys)
+    sender_email = os.getenv("SENDER_EMAIL", "").strip()
+    smtp_server = os.getenv("SMTP_SERVER", "smtp-relay.brevo.com").strip()
+    smtp_username = os.getenv("SMTP_USERNAME", "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
     
-    if not smtp_username or not smtp_password:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Email configuration missing from server environment variables."
-        )
+    # 2. THE ANTIGRAVITY FIX: Force Port 2525 to float right over the firewall
+    smtp_port = 2525 
 
-    frontend_url = "https://cognate-six.vercel.app" 
-    reset_link = f"{frontend_url}/reset-password?token={reset_token}"
-
+    # 3. Build the email
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Reset Your Cognate Account Password"
-    msg["From"] = f"Cognate Platform <{sender_email}>"
-    msg["To"] = to_email
+    msg["Subject"] = "Cognate - Your 4-Digit Recovery Code"
+    msg["From"] = sender_email
+    msg["To"] = to_email.strip()
 
     html_content = f"""
     <html>
         <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <h2 style="color: #333333; margin-bottom: 20px;">Password Reset Request</h2>
-                <p style="color: #666666; font-size: 16px; line-height: 1.5;">
-                    We received a request to reset your password for your Cognate account. Click the button below to set up a new password:
-                </p>
+                <p style="color: #666666; font-size: 16px;">Here is your 4-digit recovery code. Enter this on the Cognate workspace to reset your password:</p>
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="{reset_link}" style="background-color: #4F46E5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                        Reset Password
-                    </a>
+                    <span style="background-color: #4F46E5; color: #ffffff; padding: 15px 30px; border-radius: 6px; font-weight: bold; font-size: 28px; letter-spacing: 8px;">
+                        {reset_otp}
+                    </span>
                 </div>
             </div>
         </body>
@@ -151,21 +143,16 @@ def send_reset_email(to_email: str, reset_token: str):
     """
     msg.attach(MIMEText(html_content, "html"))
 
+    # 4. Send with Explicit TLS
     try:
-        # Port 587 requires standard SMTP (NOT SMTP_SSL)
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=15) as server:
             server.ehlo()
-            server.starttls() # CRITICAL: Upgrades the unencrypted connection to secure TLS
+            server.starttls() 
             server.login(smtp_username, smtp_password)
             server.sendmail(sender_email, to_email, msg.as_string())
-        return {"status": "success", "message": "Reset email dispatched safely."}
-        
+        print(f"SUCCESS: 4-Digit Recovery code sent via Port 2525 to {to_email}")
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Email delivery system failure: {str(e)}"
-        )
-
+        print(f"CRITICAL EMAIL FAILURE: {e}")
 
 # ─── 3. Legacy Link-Based Verification (kept for compatibility) ─────────────────
 

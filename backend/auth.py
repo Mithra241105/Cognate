@@ -16,7 +16,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel
 
 from database import mongo_instance
-from email_utils import send_otp_email_sync, send_reset_email
+from email_utils import send_otp_email_sync, send_reset_email_sync
 from models import UserCreate
 from security import create_access_token, get_password_hash, verify_password
 
@@ -179,7 +179,7 @@ async def forgot_password(request: ForgotPasswordRequest, background_tasks: Back
             {"_id": user["_id"]},
             {"$set": {"reset_otp": otp, "reset_expires": reset_expires}}
         )
-        background_tasks.add_task(send_reset_email, request.email, otp)
+        background_tasks.add_task(send_reset_email_sync, request.email, otp)
 
     return {"message": "If your email is registered, an OTP has been sent."}
 
