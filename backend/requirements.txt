@@ -3,7 +3,7 @@ uvicorn
 motor[srv]
 pymongo[srv]
 python-dotenv
-passlib[bcrypt]
+bcrypt
 python-jose[cryptography]
 certifi
 sentence-transformers
