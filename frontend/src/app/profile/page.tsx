@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
@@ -49,7 +49,7 @@ export default function ProfilePage() {
         setTimeout(() => setSaveMessage(null), 3000);
     };
 
-    const menuItems: { id: MenuSection; label: string; icon: JSX.Element }[] = [
+    const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
         {
             id: "profile",
             label: "Profile",
